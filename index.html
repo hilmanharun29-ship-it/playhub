@@ -5,65 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlayHub Premium Gallery</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: white; text-align: center; margin: 0; padding-bottom: 50px; }
-        h1 { padding: 30px; color: #0088cc; text-transform: uppercase; letter-spacing: 2px; }
-        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
-        .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #333; transition: transform 0.3s; }
-        .video-card:hover { transform: scale(1.03); border-color: #0088cc; }
+        :root { --primary-color: #0088cc; --bg-color: #0a0a0a; --card-bg: #161616; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: white; margin: 0; padding-bottom: 50px; }
+        header { background: #000; padding: 20px; border-bottom: 2px solid var(--primary-color); margin-bottom: 30px; }
+        h1 { margin: 0; font-size: 24px; color: var(--primary-color); text-transform: uppercase; }
+        
+        .gallery { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 25px; 
+            padding: 0 20px; 
+            max-width: 1400px; 
+            margin: 0 auto; 
+        }
+        
+        .video-card { 
+            background: var(--card-bg); 
+            border-radius: 15px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            border: 1px solid #222;
+        }
+        
         .video-wrapper { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
-        .video-wrapper iframe, .video-wrapper video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        
         .info { padding: 15px; text-align: left; }
-        .info p { margin: 0; font-size: 14px; color: #ccc; }
-        .no-data { grid-column: 1/-1; padding: 100px; color: #666; font-style: italic; }
+        .video-title { font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #efefef; line-height: 1.4; }
+        .video-meta { font-size: 12px; color: #777; display: flex; justify-content: space-between; }
+        
+        .no-data { padding: 100px; color: #444; font-size: 18px; }
     </style>
 </head>
 <body>
-    <h1>PlayHub Gallery</h1>
-    <div class="gallery" id="container">
-        <p class="no-data">Sedang menghubungkan ke satelit Telegram...</p>
-    </div>
 
-    <script>
-        async function loadVideos() {
-            try {
-                const res = await fetch('data_telegram.json');
-                const data = await res.json();
-                const container = document.getElementById('container');
-                container.innerHTML = '';
+<header>
+    <h1>PlayHub Video Gallery</h1>
+</header>
 
-                const updates = data.result || [];
-                const videoMessages = updates.filter(item => item.channel_post && item.channel_post.video);
+<div class="gallery" id="container">
+    <p class="no-data">Menghubungkan ke database...</p>
+</div>
 
-                if (videoMessages.length === 0) {
-                    container.innerHTML = '<p class="no-data">Belum ada kiriman video di Channel.</p>';
-                    return;
-                }
+<script>
+    async function loadVideos() {
+        try {
+            const res = await fetch('data_telegram.json');
+            const data = await res.json();
+            const container = document.getElementById('container');
+            container.innerHTML = '';
 
-                videoMessages.reverse().forEach(item => {
-                    const msg = item.channel_post;
-                    const div = document.createElement('div');
-                    div.className = 'video-card';
-                    
-                    // Kita gunakan ID pesan untuk memicu widget Telegram agar video bisa diputar
-                    const chatId = msg.chat.username || msg.chat.id;
-                    const msgId = msg.message_id;
+            const updates = data.result || [];
+            // Filter hanya pesan yang punya video
+            const videoMessages = updates.filter(item => item.channel_post && item.channel_post.video);
 
-                    div.innerHTML = `
-                        <div class="video-wrapper">
-                            <iframe src="https://t.me/${chatId}/${msgId}?embed=1" frameborder="0" scrolling="no"></iframe>
-                        </div>
-                        <div class="info">
-                            <p><b>Post ID:</b> #${msgId}</p>
-                            <p style="font-size:11px; margin-top:5px; color:#888;">Klik tombol play untuk memutar</p>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                });
-            } catch (e) {
-                document.getElementById('container').innerHTML = '<p class="no-data">Gagal memuat data. Pastikan bot sudah mengambil data terbaru.</p>';
+            if (videoMessages.length === 0) {
+                container.innerHTML = '<p class="no-data">Belum ada video. Kirim video ke channel Anda!</p>';
+                return;
             }
+
+            // Tampilkan dari yang terbaru (reverse)
+            videoMessages.reverse().forEach(item => {
+                const msg = item.channel_post;
+                const chatId = msg.chat.username || msg.chat.id;
+                const msgId = msg.message_id;
+                // Ambil caption/judul video jika ada
+                const caption = msg.caption || "Video Tanpa Judul";
+
+                const div = document.createElement('div');
+                div.className = 'video-card';
+                div.innerHTML = `
+                    <div class="video-wrapper">
+                        <iframe src="https://t.me/${chatId}/${msgId}?embed=1" frameborder="0" scrolling="no"></iframe>
+                    </div>
+                    <div class="info">
+                        <div class="video-title">${caption}</div>
+                        <div class="video-meta">
+                            <span>Post ID: #${msgId}</span>
+                            <span>Stream Ready</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        } catch (e) {
+            document.getElementById('container').innerHTML = '<p class="no-data">Gagal memuat galeri. Silakan jalankan Actions di GitHub.</p>';
         }
-        loadVideos();
-    </script>
+    }
+    loadVideos();
+</script>
+
 </body>
 </html>
