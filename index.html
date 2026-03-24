@@ -3,19 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlayHub Gallery</title>
+    <title>PlayHub Premium Gallery</title>
     <style>
-        body { font-family: sans-serif; background: #111; color: white; text-align: center; margin: 0; }
-        h1 { padding: 20px; color: #0088cc; }
-        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 10px; }
-        .video-card { background: #222; border: 1px solid #333; border-radius: 8px; padding: 10px; width: 280px; }
-        .no-data { color: #888; margin-top: 50px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: white; text-align: center; margin: 0; padding-bottom: 50px; }
+        h1 { padding: 30px; color: #0088cc; text-transform: uppercase; letter-spacing: 2px; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #333; transition: transform 0.3s; }
+        .video-card:hover { transform: scale(1.03); border-color: #0088cc; }
+        .video-wrapper { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
+        .video-wrapper iframe, .video-wrapper video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        .info { padding: 15px; text-align: left; }
+        .info p { margin: 0; font-size: 14px; color: #ccc; }
+        .no-data { grid-column: 1/-1; padding: 100px; color: #666; font-style: italic; }
     </style>
 </head>
 <body>
     <h1>PlayHub Gallery</h1>
     <div class="gallery" id="container">
-        <p class="no-data">Sedang memuat video dari Telegram...</p>
+        <p class="no-data">Sedang menghubungkan ke satelit Telegram...</p>
     </div>
 
     <script>
@@ -26,24 +31,36 @@
                 const container = document.getElementById('container');
                 container.innerHTML = '';
 
-                if (!data.result || data.result.length === 0) {
-                    container.innerHTML = '<p class="no-data">Belum ada kiriman di Channel.</p>';
+                const updates = data.result || [];
+                const videoMessages = updates.filter(item => item.channel_post && item.channel_post.video);
+
+                if (videoMessages.length === 0) {
+                    container.innerHTML = '<p class="no-data">Belum ada kiriman video di Channel.</p>';
                     return;
                 }
 
-                data.result.forEach(item => {
-                    if (item.channel_post && item.channel_post.video) {
-                        const div = document.createElement('div');
-                        div.className = 'video-card';
-                        div.innerHTML = `
-                            <p style="font-size:12px;">Video Terdeteksi</p>
-                            <small>ID: ${item.channel_post.video.file_id.substring(0,15)}...</small>
-                        `;
-                        container.appendChild(div);
-                    }
+                videoMessages.reverse().forEach(item => {
+                    const msg = item.channel_post;
+                    const div = document.createElement('div');
+                    div.className = 'video-card';
+                    
+                    // Kita gunakan ID pesan untuk memicu widget Telegram agar video bisa diputar
+                    const chatId = msg.chat.username || msg.chat.id;
+                    const msgId = msg.message_id;
+
+                    div.innerHTML = `
+                        <div class="video-wrapper">
+                            <iframe src="https://t.me/${chatId}/${msgId}?embed=1" frameborder="0" scrolling="no"></iframe>
+                        </div>
+                        <div class="info">
+                            <p><b>Post ID:</b> #${msgId}</p>
+                            <p style="font-size:11px; margin-top:5px; color:#888;">Klik tombol play untuk memutar</p>
+                        </div>
+                    `;
+                    container.appendChild(div);
                 });
             } catch (e) {
-                document.getElementById('container').innerHTML = '<p class="no-data">Kirim video ke channel, lalu jalankan Actions kembali.</p>';
+                document.getElementById('container').innerHTML = '<p class="no-data">Gagal memuat data. Pastikan bot sudah mengambil data terbaru.</p>';
             }
         }
         loadVideos();
