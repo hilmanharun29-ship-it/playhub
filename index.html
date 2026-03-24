@@ -2,11 +2,51 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlayHub Gallery</title>
+    <style>
+        body { font-family: sans-serif; background: #111; color: white; text-align: center; margin: 0; }
+        h1 { padding: 20px; color: #0088cc; }
+        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 10px; }
+        .video-card { background: #222; border: 1px solid #333; border-radius: 8px; padding: 10px; width: 280px; }
+        .no-data { color: #888; margin-top: 50px; }
+    </style>
 </head>
 <body>
-    <h1>Selamat Datang di PlayHub</h1>
-    <p>Sedang menyiapkan galeri video otomatis...</p>
+    <h1>PlayHub Gallery</h1>
+    <div class="gallery" id="container">
+        <p class="no-data">Sedang memuat video dari Telegram...</p>
+    </div>
+
+    <script>
+        async function loadVideos() {
+            try {
+                const res = await fetch('data_telegram.json');
+                const data = await res.json();
+                const container = document.getElementById('container');
+                container.innerHTML = '';
+
+                if (!data.result || data.result.length === 0) {
+                    container.innerHTML = '<p class="no-data">Belum ada kiriman di Channel.</p>';
+                    return;
+                }
+
+                data.result.forEach(item => {
+                    if (item.channel_post && item.channel_post.video) {
+                        const div = document.createElement('div');
+                        div.className = 'video-card';
+                        div.innerHTML = `
+                            <p style="font-size:12px;">Video Terdeteksi</p>
+                            <small>ID: ${item.channel_post.video.file_id.substring(0,15)}...</small>
+                        `;
+                        container.appendChild(div);
+                    }
+                });
+            } catch (e) {
+                document.getElementById('container').innerHTML = '<p class="no-data">Kirim video ke channel, lalu jalankan Actions kembali.</p>';
+            }
+        }
+        loadVideos();
+    </script>
 </body>
 </html>
-
