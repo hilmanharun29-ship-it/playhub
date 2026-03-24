@@ -3,97 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlayHub Premium Gallery</title>
+    <title>PlayHub - Cinematic Gallery</title>
     <style>
-        :root { --primary-color: #0088cc; --bg-color: #0a0a0a; --card-bg: #161616; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: white; margin: 0; padding-bottom: 50px; }
-        header { background: #000; padding: 20px; border-bottom: 2px solid var(--primary-color); margin-bottom: 30px; }
-        h1 { margin: 0; font-size: 24px; color: var(--primary-color); text-transform: uppercase; }
+        :root { --primary: #00d2ff; --secondary: #3a7bd5; --dark: #050505; --card: #121212; }
+        body { font-family: 'Poppins', sans-serif; background: var(--dark); color: white; margin: 0; }
         
+        header { 
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        h1 { margin: 0; font-size: 20px; letter-spacing: 3px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+
         .gallery { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 25px; 
-            padding: 0 20px; 
-            max-width: 1400px; 
-            margin: 0 auto; 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 20px; padding: 25px; max-width: 1200px; margin: 0 auto; 
         }
-        
+
         .video-card { 
-            background: var(--card-bg); 
-            border-radius: 15px; 
-            overflow: hidden; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            border: 1px solid #222;
+            background: var(--card); border-radius: 20px; overflow: hidden;
+            border: 1px solid #222; position: relative; transition: 0.3s;
         }
         
+        .video-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 0 20px rgba(0, 210, 255, 0.2); }
+
+        /* Bingkai atas untuk sedikit menyamarkan header Telegram */
+        .card-header-accent {
+            height: 5px; background: linear-gradient(90deg, var(--primary), var(--secondary)); width: 100%;
+        }
+
         .video-wrapper { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+        .info { padding: 15px; background: #181818; }
+        .video-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: #fff; height: 40px; overflow: hidden; }
         
-        .info { padding: 15px; text-align: left; }
-        .video-title { font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #efefef; line-height: 1.4; }
-        .video-meta { font-size: 12px; color: #777; display: flex; justify-content: space-between; }
-        
-        .no-data { padding: 100px; color: #444; font-size: 18px; }
+        .btn-play {
+            display: block; width: 100%; padding: 10px; background: #222; border-radius: 8px;
+            color: var(--primary); text-decoration: none; font-size: 13px; font-weight: bold;
+            text-align: center; border: 1px solid #333; margin-top: 10px;
+        }
+
+        .btn-play:hover { background: var(--primary); color: #000; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>PlayHub Video Gallery</h1>
+    <h1>PLAYHUB PREMIUM</h1>
 </header>
 
-<div class="gallery" id="container">
-    <p class="no-data">Menghubungkan ke database...</p>
-</div>
+<div class="gallery" id="container"></div>
 
 <script>
     async function loadVideos() {
-        try {
-            const res = await fetch('data_telegram.json');
-            const data = await res.json();
-            const container = document.getElementById('container');
-            container.innerHTML = '';
+        const res = await fetch('data_telegram.json');
+        const data = await res.json();
+        const container = document.getElementById('container');
+        const updates = data.result || [];
+        const videoMessages = updates.filter(item => item.channel_post && item.channel_post.video);
 
-            const updates = data.result || [];
-            // Filter hanya pesan yang punya video
-            const videoMessages = updates.filter(item => item.channel_post && item.channel_post.video);
+        videoMessages.reverse().forEach(item => {
+            const msg = item.channel_post;
+            const chatId = msg.chat.username || msg.chat.id;
+            const caption = msg.caption || "Exclusive Content #" + msg.message_id;
 
-            if (videoMessages.length === 0) {
-                container.innerHTML = '<p class="no-data">Belum ada video. Kirim video ke channel Anda!</p>';
-                return;
-            }
-
-            // Tampilkan dari yang terbaru (reverse)
-            videoMessages.reverse().forEach(item => {
-                const msg = item.channel_post;
-                const chatId = msg.chat.username || msg.chat.id;
-                const msgId = msg.message_id;
-                // Ambil caption/judul video jika ada
-                const caption = msg.caption || "Video Tanpa Judul";
-
-                const div = document.createElement('div');
-                div.className = 'video-card';
-                div.innerHTML = `
-                    <div class="video-wrapper">
-                        <iframe src="https://t.me/${chatId}/${msgId}?embed=1" frameborder="0" scrolling="no"></iframe>
-                    </div>
-                    <div class="info">
-                        <div class="video-title">${caption}</div>
-                        <div class="video-meta">
-                            <span>Post ID: #${msgId}</span>
-                            <span>Stream Ready</span>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        } catch (e) {
-            document.getElementById('container').innerHTML = '<p class="no-data">Gagal memuat galeri. Silakan jalankan Actions di GitHub.</p>';
-        }
+            const div = document.createElement('div');
+            div.className = 'video-card';
+            div.innerHTML = `
+                <div class="card-header-accent"></div>
+                <div class="video-wrapper">
+                    <iframe src="https://t.me/${chatId}/${msg.message_id}?embed=1" frameborder="0" scrolling="no"></iframe>
+                </div>
+                <div class="info">
+                    <div class="video-title">${caption}</div>
+                    <a href="#" class="btn-play">TAP TO VIEW FULLSCREEN</a>
+                </div>
+            `;
+            container.appendChild(div);
+        });
     }
     loadVideos();
 </script>
-
 </body>
 </html>
