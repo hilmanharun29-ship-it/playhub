@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlayHub Premium Gallery</title>
+    
+    <title>PlayHub - Nonton Video Viral Terlengkap & Terbaru 2026</title>
+    <meta name="description" content="Temukan koleksi video viral terbaru dan konten eksklusif hanya di PlayHub. Update setiap hari langsung dari Telegram.">
+    <meta name="keywords" content="video viral, playhub, video terbaru, konten eksklusif, galeri video telegram">
+    
+    <meta property="og:title" content="PlayHub - Pusat Video Viral">
+    <meta property="og:description" content="Koleksi video paling update hari ini.">
+    <meta property="og:type" content="website">
+
     <style>
         :root { --primary: #00d2ff; --secondary: #3a7bd5; --dark: #050505; --card: #121212; }
-        body { font-family: 'Poppins', sans-serif; background: var(--dark); color: white; margin: 0; padding-bottom: 50px; }
+        body { font-family: 'Poppins', sans-serif; background: var(--dark); color: white; margin: 0; padding-bottom: 80px; }
         
         header { 
             background: linear-gradient(to right, var(--primary), var(--secondary));
@@ -58,10 +66,10 @@
             const updates = data.result || [];
             const container = document.getElementById('container');
             
-            // Filter hanya pesan yang berisi video
+            // Ambil hanya pesan yang ada videonya
             const videoPosts = updates.filter(item => item.channel_post && item.channel_post.video);
             
-            // Urutkan dari yang terbaru (reverse)
+            // Urutkan dari yang paling baru
             videoPosts.reverse().forEach(item => {
                 const msg = item.channel_post;
                 const chatId = msg.chat.username || msg.chat.id;
